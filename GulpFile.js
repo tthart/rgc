@@ -8,6 +8,7 @@ const pkg = require('./package.json'),
   runSequence = require('run-sequence'),
   size = require('gulp-size'),
   minimist = require('minimist'),
+  browsersync = require('browser-sync').create(),
   fileExists = require('file-exists'),
   source = ['scss/**/*.scss'];
 
@@ -21,6 +22,7 @@ gulp.task('lint', () => {
     .pipe(sassLint.failOnError());
 });
 
+
 gulp.task('build', () => {
   return gulp.src(source)
     .pipe(sass())
@@ -32,7 +34,8 @@ gulp.task('build', () => {
     }))
     .pipe(header('/*!v<%= pkg.version %>*/', {pkg}))
     .pipe(gulp.dest('dist'))
-    .pipe(gulp.dest('../blazecss.github.io/css'));
+    .pipe(gulp.dest('../blazecss.github.io/css'))
+    .pipe(browsersync.reload({stream:true}));
 });
 
 gulp.task('demo', () => gulp.src('dist/**/blaze*.min.css').pipe(gulp.dest('demo')));
@@ -67,3 +70,22 @@ gulp.task('create-theme', () => {
 });
 
 gulp.task('theme', done => runSequence('create-theme', 'default', done));
+
+var prototype_config = {
+  server: '../../../../',
+  files: 'css/*.css'
+};
+
+gulp.task('browser-sync',function() {
+  browsersync.init(prototype_config);
+});
+
+gulp.task('prototype', ['browser-sync'], function() {
+  gulp.watch("scss/**/*.scss", ['css']);
+  gulp.watch("js/**/*.js", ['scripts']);
+  gulp.watch("html/**/*.html", ['bs-reload'])
+});
+gulp.task('bs-reload', function() {
+  browsersync.reload();
+});
+
